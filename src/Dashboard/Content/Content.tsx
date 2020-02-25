@@ -47,33 +47,38 @@ const Content = () => {
   }, []);
 
   const getModelDetails = () => {
-    setContent(MockData.MockPageData);
+    // setContent(MockData.MockPageData);
 
     const resp = MockData.MockPageData;
 
-    resp.data = (resp.data || []).map(data => {
-      data.metaData = flat(data.metaData);
+    // resp.data = (resp.data || []).map(data => {
+    //   data.metaData = flat(data.metaData);
+    //   return data;
+    // });
+
+    // const tempFields: any = [];
+    // resp.data.forEach((data: any) => {
+    //   const model = getModel(data.type);
+
+    //   if (model) {
+    //     tempFields.push({
+    //       ...data,
+    //       metaData: getEditableFeilds(data.metaData, model)
+    //     });
+    //   }
+    // });
+
+    resp.data = resp.data.map((data: any) => {
+      data.model = getModel(data.type);
       return data;
     });
-
-    const tempFields: any = [];
-    resp.data.forEach((data: any) => {
-      const model = getModel(data.type);
-
-      if (model) {
-        tempFields.push({
-          ...data,
-          metaData: getEditableFeilds(data.metaData, model)
-        });
-      }
-    });
-
+    setContent(resp);
     // console.log(flat.unflatten(resp));
 
     // console.log(tempFields);
 
     // groupFields(tempFields);
-    setEditableFields(tempFields);
+    // setEditableFields(tempFields);
   };
 
   // const groupFields = (fields) => {
@@ -227,19 +232,97 @@ const Content = () => {
     console.log(editableFields);
   };
 
-  const renderFields = data => {
-    data = MockData.MockPageData.data;
+  const getEditFields = (data, model, i, ci?: boolean, compIndex?: number) => {
     console.log(data);
-    return Object.keys(MockData.MockPageData.data).map(key => {
-      const d = data[key];
-      console.log(d, key);
-      return (
-        <div>
-          {d.type}
-          {flatResp(d.metaData)}
-        </div>
-      );
+
+    return (
+      <div>
+        {Object.keys(data).map((key, index) => {
+          if (data[key] instanceof Array) {
+            return (
+              <Fragment>
+                {getEditFields(
+                  data[key],
+                  model,
+                  `${i}-${index}`,
+                  data[key].length > 1 ? true : false
+                )}
+              </Fragment>
+            );
+          } else if (data[key] instanceof Object) {
+            return (
+              <div className={ci ? `${Styles.borderBottom}` : ""}>
+                {getEditFields(data[key], model, `${i}-${index}`)}
+              </div>
+            );
+          } else {
+            let fieldType = getTypeFromModel(key, model);
+            fieldType = { ...fieldType, value: data[key] };
+            console.log(fieldType);
+            switch (fieldType.type) {
+              case "text":
+                return (
+                  <div className={Styles.field}>
+                    <label>
+                      {fieldType.label} {ci ? i : ""}
+                    </label>
+                    {renderTextBox(fieldType, `${i}-${index}`)}
+                  </div>
+                );
+              case "markedText":
+                return (
+                  <div className={Styles.field}>
+                    <label>
+                      {fieldType.label} {i}-{index}
+                    </label>
+                    {renderRichTextEditor(fieldType, `${i}-${index}`)}
+                  </div>
+                );
+              case "media":
+                return (
+                  <div className={Styles.field}>
+                    <label>
+                      {fieldType.label} {i}-{index}
+                    </label>
+                    {renderMediaSelector(fieldType, `${i}-${index}`)}
+                  </div>
+                );
+            }
+          }
+        })}
+      </div>
+    );
+  };
+
+  const getTypeFromModel = (key, model) => {
+    const field = model.fields.filter(field => {
+      if (field.keyName === key) {
+        return field;
+      }
+      return null;
     });
+    return field[0];
+  };
+
+  const renderFields = () => {
+    const contents = content;
+    console.log(contents);
+    return (
+      <div>
+        {(contents.data || []).map((d, index) => {
+          d.fields = flat(d.metaData);
+          console.log(d);
+          const fields = getEditFields(d.metaData, d.model, index);
+
+          return (
+            <div className={Styles.models}>
+              <h3>{d.model.label}</h3>
+              <div className={Styles.fields}>{fields}</div>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   const flatResp = t => {
@@ -291,11 +374,11 @@ const Content = () => {
         </Tabs>
         <TabPanel value={value} index={0}>
           <div className={Styles.content}>
-            {(editableFields || []).map((data, index) => {
+            {/* {(editableFields || []).map((data, index) => {
               return renderModel(data, index);
-            })}
+            })} */}
 
-            {/* {renderFields(content)} */}
+            {renderFields()}
           </div>
         </TabPanel>
         <TabPanel value={value} index={1}>
