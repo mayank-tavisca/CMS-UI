@@ -47,35 +47,33 @@ const Content = () => {
   }, []);
 
   const getModelDetails = () => {
-    dataService.getPageContent(1).then(res => {
-      setContent(MockData.MockPageData);
+    setContent(MockData.MockPageData);
 
-      const resp = MockData.MockPageData;
+    const resp = MockData.MockPageData;
 
-      resp.data = (resp.data || []).map(data => {
-        data.metaData = flat(data.metaData);
-        return data;
-      });
-
-      const tempFields: any = [];
-      resp.data.forEach((data: any) => {
-        const model = getModel(data.type);
-
-        if (model) {
-          tempFields.push({
-            ...data,
-            metaData: getEditableFeilds(data.metaData, model)
-          });
-        }
-      });
-
-      // console.log(flat.unflatten(resp));
-
-      // console.log(tempFields);
-
-      // groupFields(tempFields);
-      setEditableFields(tempFields);
+    resp.data = (resp.data || []).map(data => {
+      data.metaData = flat(data.metaData);
+      return data;
     });
+
+    const tempFields: any = [];
+    resp.data.forEach((data: any) => {
+      const model = getModel(data.type);
+
+      if (model) {
+        tempFields.push({
+          ...data,
+          metaData: getEditableFeilds(data.metaData, model)
+        });
+      }
+    });
+
+    // console.log(flat.unflatten(resp));
+
+    // console.log(tempFields);
+
+    // groupFields(tempFields);
+    setEditableFields(tempFields);
   };
 
   // const groupFields = (fields) => {
