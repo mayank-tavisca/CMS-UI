@@ -1,26 +1,32 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import "./App.css";
+import Dashboard from "./Dashboard/Dashboard";
+import { Switch, Route, BrowserRouter, Redirect } from "react-router-dom";
 
-function App() {
+const App = () => {
+  const routes = [
+    {
+      path: "/dashboard",
+      component: Dashboard,
+      exact: false
+    }
+  ];
+
+  const renderRoutes = () => {
+    const routeComponents = routes.map(({ path, component, exact }, key) => (
+      <Route path={path} component={component} exact={exact} key={key} />
+    ));
+    return <Switch>{routeComponents}</Switch>;
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <BrowserRouter>
+        {renderRoutes()}
+        {/* <Redirect to={"/dashboard"} /> */}
+      </BrowserRouter>
     </div>
   );
-}
+};
 
 export default App;
