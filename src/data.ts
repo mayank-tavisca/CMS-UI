@@ -59,13 +59,7 @@ export const MockModels = [
         label: "Accordion",
         fields: [
             { keyName: "heading", type: "text", label: "Heading" },
-            {
-                keyName: 'content', type: 'markedText', label: 'Contents'
-                // , fields: [
-                //     { keyName: "heading", type: "text", label: "Heading" },
-                //     { keyName: "content", type: "markedText", label: "Content" }
-                // ]
-            },
+            { keyName: 'content', type: 'markedText', label: 'Content' },
         ]
     },
     {

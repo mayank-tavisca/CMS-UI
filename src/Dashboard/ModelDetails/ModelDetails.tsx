@@ -57,7 +57,7 @@ const ModelDetails: React.FC<IProps> = ({
     const model = MockData.MockModels.find(model => {
       return model.id === id;
     });
-    setContent(model);
+    // setContent(model);
   };
 
   const handlePopupOpen = () => {

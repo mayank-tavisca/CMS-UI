@@ -3,10 +3,11 @@ import Styles from "./Content.module.scss";
 import RichTextEditor from "../../Components/RichTextEditor/RichTextEditor";
 import { DataService } from "../../Services/dataService";
 import { Button, Typography, Box, Tabs, Tab } from "@material-ui/core";
-import * as flat from "flat";
 import * as MockData from "../../Services/mockData";
 import { MockModels } from "./../../data";
-import { parseData } from "../../Services/utils";
+import { useForm } from "react-hook-form";
+import AccordionHandler from "../../Components/AccordionHandler/AccordionHandler";
+import SectionHandler from "../../Components/SectionHandler/SectionHandler";
 
 function TabPanel(props: any) {
   const { children, value, index, ...other } = props;
@@ -37,6 +38,7 @@ const Content = () => {
   const [content, setContent] = useState<any>({});
   const [editableFields, setEditableFields] = useState<any>([]);
   const [value, setValue] = React.useState(0);
+  const { register, getValues } = useForm();
 
   const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setValue(newValue);
@@ -47,308 +49,42 @@ const Content = () => {
   }, []);
 
   const getModelDetails = () => {
-    // setContent(MockData.MockPageData);
-
     const resp = MockData.MockPageData;
 
-    // resp.data = (resp.data || []).map(data => {
-    //   data.metaData = flat(data.metaData);
+    // resp.data = resp.data.map((data: any) => {
     //   return data;
     // });
 
-    // const tempFields: any = [];
-    // resp.data.forEach((data: any) => {
-    //   const model = getModel(data.type);
-
-    //   if (model) {
-    //     tempFields.push({
-    //       ...data,
-    //       metaData: getEditableFeilds(data.metaData, model)
-    //     });
-    //   }
-    // });
-
-    resp.data = resp.data.map((data: any) => {
-      data.model = getModel(data.type);
-      return data;
-    });
     setContent(resp);
-    // console.log(flat.unflatten(resp));
-
-    // console.log(tempFields);
-
-    // groupFields(tempFields);
-    // setEditableFields(tempFields);
   };
 
-  // const groupFields = (fields) => {
-  //   fields.reduce()
-  // }
-
-  const getModel = key => {
-    let t;
-    MockModels.forEach(model => {
-      if (model.name === key) {
-        t = model;
-        return;
-      }
-    });
-    return t;
-  };
-
-  const getEditableFeilds = (data, model) => {
-    const fields: any = [];
-    // console.log(data, model);
-
-    Object.keys(data).forEach((key: any) => {
-      const keysList = key.split(".");
-
-      (model.fields || []).forEach(e => {
-        if (e.type === "array") {
-          // const subFields: any = [];
-          e.fields.map(ele => {
-            if (ele.keyName === keysList[keysList.length - 1]) {
-              const temp = {
-                keys: keysList,
-                key: key,
-                value: data[key],
-                ...ele
-              };
-              fields.push(temp);
-            }
-          });
-          // console.log(subFields);
-          // if (subFields.length) {
-          //   fields.push(subFields);
-          // }
-        } else {
-          if (e.keyName === keysList[keysList.length - 1]) {
-            const temp = {
-              keys: keysList,
-              key: key,
-              value: data[key],
-              ...e
-            };
-            fields.push(temp);
-          }
-        }
-      });
+  const updateData = updatedComponentData => {
+    const temp = Object.assign({}, content);
+    const updateIndex = temp.data.findIndex(t => {
+      return t.id === updatedComponentData.id;
     });
 
-    return fields;
-  };
-
-  const renderRichTextEditor = (data, index) => {
-    return (
-      <div className={Styles.markedText}>
-        <RichTextEditor value={data} index={index} />
-      </div>
-    );
-  };
-
-  const renderTextBox = (data, index) => {
-    return <input className={Styles.input} value={data.value} />;
-  };
-
-  const renderMediaSelector = (data, index) => {
-    return <input type="file" />;
-  };
-
-  const renderArray = (data, index) => {
-    console.log(data);
-    return (
-      <div>
-        {data.fields.map((t, ind) => {
-          // const i = `${index}-${ind}`;
-
-          return renderField(t, index, ind);
-        })}
-      </div>
-    );
-  };
-
-  const getFieldType = {
-    markedText: renderRichTextEditor,
-    text: renderTextBox,
-    media: renderMediaSelector,
-    array: renderArray
-  };
-
-  const renderField = (field, modelIndex, index) => {
-    const fieldIndex = `${modelIndex}-${index}`;
-    return (
-      <div className={Styles.field}>
-        <label>
-          {field.label} {modelIndex} {index}
-        </label>
-        {getFieldType[field.type](field, fieldIndex)}
-      </div>
-    );
-  };
-
-  const renderModel = (model, modelIndex) => {
-    return (
-      <div className={Styles.models}>
-        <h3>{model.type}</h3>
-        <div className={Styles.fields}>
-          {(model.metaData || []).map((field, index) => {
-            return renderField(field, modelIndex, index);
-          })}
-          <Button
-            className={Styles.addBtn}
-            onClick={() => {
-              addNewContent(model.metaData, modelIndex);
-            }}
-          >
-            Add new content
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  const addNewContent = (data, key) => {
-    console.log(key);
-    console.log(data);
-
-    const t: any = MockModels[4].fields[0];
-    const fields: any = t.fields;
-
-    console.log(fields);
-
-    fields[0].key = "content.13.heading";
-    fields[0].value = "";
-
-    fields[1].key = "content.13.content.0.content";
-    fields[1].value = "";
-
-    let temp: any = [...editableFields];
-
-    // temp = temp.concat(editableFields);
-
-    temp[4].metaData.push(...fields);
-
-    setEditableFields(temp);
-    console.log(editableFields);
-  };
-
-  const getEditFields = (data, model, i, ci?: boolean, compIndex?: number) => {
-    console.log(data);
-
-    return (
-      <div>
-        {Object.keys(data).map((key, index) => {
-          if (data[key] instanceof Array) {
-            return (
-              <Fragment>
-                {getEditFields(
-                  data[key],
-                  model,
-                  `${i}-${index}`,
-                  data[key].length > 1 ? true : false
-                )}
-              </Fragment>
-            );
-          } else if (data[key] instanceof Object) {
-            return (
-              <div className={ci ? `${Styles.borderBottom}` : ""}>
-                {getEditFields(data[key], model, `${i}-${index}`)}
-              </div>
-            );
-          } else {
-            let fieldType = getTypeFromModel(key, model);
-            fieldType = { ...fieldType, value: data[key] };
-            console.log(fieldType);
-            switch (fieldType.type) {
-              case "text":
-                return (
-                  <div className={Styles.field}>
-                    <label>
-                      {fieldType.label} {ci ? i : ""}
-                    </label>
-                    {renderTextBox(fieldType, `${i}-${index}`)}
-                  </div>
-                );
-              case "markedText":
-                return (
-                  <div className={Styles.field}>
-                    <label>
-                      {fieldType.label} {i}-{index}
-                    </label>
-                    {renderRichTextEditor(fieldType, `${i}-${index}`)}
-                  </div>
-                );
-              case "media":
-                return (
-                  <div className={Styles.field}>
-                    <label>
-                      {fieldType.label} {i}-{index}
-                    </label>
-                    {renderMediaSelector(fieldType, `${i}-${index}`)}
-                  </div>
-                );
-            }
-          }
-        })}
-      </div>
-    );
-  };
-
-  const getTypeFromModel = (key, model) => {
-    const field = model.fields.filter(field => {
-      if (field.keyName === key) {
-        return field;
-      }
-      return null;
-    });
-    return field[0];
-  };
-
-  const renderFields = () => {
-    const contents = content;
-    console.log(contents);
-    return (
-      <div>
-        {(contents.data || []).map((d, index) => {
-          d.fields = flat(d.metaData);
-          console.log(d);
-          const fields = getEditFields(d.metaData, d.model, index);
-
-          return (
-            <div className={Styles.models}>
-              <h3>{d.model.label}</h3>
-              <div className={Styles.fields}>{fields}</div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  const flatResp = t => {
-    console.log(t);
-    if (t instanceof Array) {
-      return t.map(e => {
-        return flatResp(e);
-      });
-    } else if (t instanceof Object) {
-      return Object.keys(t).map(r => {
-        if (t[r] instanceof Object || t[r] instanceof Array) {
-          return flatResp(t[r]);
-        } else {
-          console.log(r);
-          if (r === "heading") {
-            return renderTextBox({ value: "test" }, 1);
-          } else if (r === "content") {
-            return renderRichTextEditor({ value: "test" }, 1);
-          } else {
-            return <div>Some field</div>;
-          }
-        }
-      });
-    } else {
-      return <div>ekse</div>;
+    if (updateIndex !== -1) {
+      temp.data[updateIndex] = updatedComponentData;
+      setContent(temp);
     }
+  };
+
+  const renderAccordionComponent = data => {
+    return <AccordionHandler data={data} emitUpdatedData={updateData} />;
+  };
+
+  const renderSectionComponent = data => {
+    return <SectionHandler data={data} emitUpdatedData={updateData} />;
+  };
+
+  const getComponentType = {
+    Section: renderSectionComponent,
+    AccordionComponent: renderAccordionComponent
+  };
+
+  const publishChanges = () => {
+    console.log(content);
   };
 
   return (
@@ -358,7 +94,7 @@ const Content = () => {
           <h3>{content.name}Travel Benefit</h3>
           <p>{content.description}</p>
         </div>
-        <Button color="primary" variant="contained">
+        <Button color="primary" variant="contained" onClick={publishChanges}>
           Publish
         </Button>
       </div>
@@ -374,17 +110,21 @@ const Content = () => {
         </Tabs>
         <TabPanel value={value} index={0}>
           <div className={Styles.content}>
-            {/* {(editableFields || []).map((data, index) => {
-              return renderModel(data, index);
-            })} */}
-
-            {renderFields()}
+            {(content.data || []).map(data => {
+              return (
+                <div className={Styles.models}>
+                  <h3>{data.type}</h3>
+                  {getComponentType[data.type]
+                    ? getComponentType[data.type](data)
+                    : false}
+                </div>
+              );
+            })}
           </div>
         </TabPanel>
         <TabPanel value={value} index={1}>
           <div className={Styles.content}>
             <pre style={{ textAlign: "left" }}>
-              {JSON.stringify(editableFields, null, 3)}
               {JSON.stringify(content, null, 3)}
             </pre>
           </div>

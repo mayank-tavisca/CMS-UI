@@ -12,13 +12,20 @@ import {
 interface IProps {
   value: any;
   index: number;
+  getValue?: boolean;
+  returnValue?: any;
 }
 
-const RichTextEditor: React.FC<IProps> = ({ value, index }) => {
+const RichTextEditor: React.FC<IProps> = ({
+  value,
+  index,
+  getValue,
+  returnValue
+}) => {
   const [markedTextEditorView, setMarkedTextEditorView]: any = useState();
 
   useEffect(() => {
-    const text = value.value;
+    const text = value;
     const markedTextEditor: any = document.querySelector(
       "#markedTextEditor" + index
     );
@@ -31,6 +38,20 @@ const RichTextEditor: React.FC<IProps> = ({ value, index }) => {
       })
     );
   }, []);
+
+  useEffect(() => {
+    if (getValue) {
+      returnValue(submitMarkedText());
+    }
+  }, [getValue]);
+
+  const submitMarkedText = () => {
+    const value = defaultMarkdownSerializer.serialize(
+      markedTextEditorView.state.doc
+    );
+    return value;
+  };
+
   return (
     <Fragment>
       <div
