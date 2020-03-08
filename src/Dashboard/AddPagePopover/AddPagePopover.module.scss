@@ -1,0 +1,13 @@
+.formGroup {
+  display: flex;
+  flex-direction: row !important;
+}
+.formElement {
+  width: 350px;
+  margin: 10px 20px !important;
+}
+.submitBtn {
+  align-self: center;
+  margin-top: 140px !important;
+  width: 200px;
+}

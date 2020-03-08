@@ -11,7 +11,7 @@ import {
 
 interface IProps {
   value: any;
-  index: number;
+  index: any;
   getValue?: boolean;
   returnValue?: any;
 }
@@ -26,6 +26,7 @@ const RichTextEditor: React.FC<IProps> = ({
 
   useEffect(() => {
     const text = value;
+    console.log(index);
     const markedTextEditor: any = document.querySelector(
       "#markedTextEditor" + index
     );

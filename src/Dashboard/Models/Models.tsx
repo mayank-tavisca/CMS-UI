@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from "react";
+import React, { useState, Fragment, useEffect } from "react";
 import * as MockData from "../../data";
 import {
   Paper,
@@ -9,14 +9,31 @@ import {
   TableRow,
   TableCell,
   TablePagination,
-  makeStyles
+  makeStyles,
+  Fab
 } from "@material-ui/core";
 import { useHistory } from "react-router-dom";
 import Styles from "./Models.module.scss";
+import { DataService } from "./../../Services/dataService";
+import AddModelPopover from "../AddModelPopover/AddModelPopover";
+import AddIcon from "@material-ui/icons/Add";
 
-const columns = [{ id: "name", label: "Name" }];
+const columns = [
+  {
+    id: "type",
+    label: "Name"
+  },
+  {
+    id: "schemaVersion",
+    label: "Schema Version"
+  },
+  {
+    id: "lastModifiedOn",
+    label: "Updated"
+  }
+];
 
-const rows = MockData.MockModels;
+// const rows = MockData.MockModels;
 
 const useStyles = makeStyles({
   root: {
@@ -32,6 +49,27 @@ const Models = () => {
   const classes = useStyles();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [models, setModels] = useState<any>([]);
+  const [addModelPopoverOpen, setAddModelPopoverOpen] = useState(false);
+
+  const dataService = new DataService();
+
+  useEffect(() => {
+    dataService.getContetTypes().then((resp: any) => {
+      console.log(resp);
+      if (resp.status === 200) {
+        setModels(resp.data.data);
+      }
+    });
+  }, []);
+
+  const closeModelPopover = () => {
+    setAddModelPopoverOpen(false);
+  };
+
+  const toggleAddModelPopover = () => {
+    setAddModelPopoverOpen(true);
+  };
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -61,21 +99,28 @@ const Models = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {rows
+              {models
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map(row => {
+                .map((model: any) => {
                   return (
-                    <TableRow hover role="checkbox" tabIndex={-1} key={row.id}>
+                    <TableRow
+                      hover
+                      role="checkbox"
+                      tabIndex={-1}
+                      key={model.id}
+                    >
                       {columns.map(column => {
-                        const value = row[column.id];
+                        const value = model[column.id];
                         return (
                           <TableCell
                             key={column.id}
                             onClick={() => {
-                              redirectToModelDetails(row);
+                              redirectToModelDetails(model);
                             }}
                           >
-                            {value}
+                            {value && column.id === "lastModifiedOn"
+                              ? new Date(value).toLocaleString()
+                              : value}
                           </TableCell>
                         );
                       })}
@@ -88,7 +133,7 @@ const Models = () => {
         <TablePagination
           rowsPerPageOptions={[10, 25, 100]}
           component="div"
-          count={rows.length}
+          count={models.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onChangePage={handleChangePage}
@@ -103,6 +148,14 @@ const Models = () => {
         <h3>Content Models</h3>
 
         {renderTable()}
+        <Fab onClick={toggleAddModelPopover} className={Styles.addIcon}>
+          <AddIcon />
+        </Fab>
+
+        <AddModelPopover
+          handleClose={closeModelPopover}
+          open={addModelPopoverOpen}
+        />
       </div>
     </Fragment>
   );

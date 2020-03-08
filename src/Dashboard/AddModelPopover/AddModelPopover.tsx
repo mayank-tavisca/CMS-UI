@@ -12,14 +12,17 @@ import {
   InputLabel,
   MenuItem
 } from "@material-ui/core";
-import Style from "./AddFieldPopover.module.scss";
+import Style from "./AddModelPopover.module.scss";
 import { useForm } from "react-hook-form";
+import { DataService } from "../../Services/dataService";
+import { useHistory } from "react-router-dom";
+import uuid from "react-uuid";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     paper: {
       position: "absolute",
-      width: 800,
+      width: 400,
       height: 400,
       backgroundColor: "#fff",
       padding: theme.spacing(2, 4, 3),
@@ -41,10 +44,10 @@ interface IProps {
   handleOpen?: any;
   handleClose?: any;
   data?: any;
-  onSubmit: any;
+  onSubmit?: any;
 }
 
-const AddFieldPopover: React.FC<IProps> = ({
+const AddModelPopover: React.FC<IProps> = ({
   open,
   handleOpen,
   handleClose,
@@ -52,70 +55,46 @@ const AddFieldPopover: React.FC<IProps> = ({
   onSubmit
 }) => {
   const classes = useStyles();
+  const history = useHistory();
   const { register, handleSubmit, setValue } = useForm();
 
   const [modalStyle] = useState(getModalStyle);
   const [isEditMode, setIsEditMode] = useState(false);
+  const dataService = new DataService();
 
   useEffect(() => {
-    register({ name: "fieldType" });
-  }, []);
-
-  useEffect(() => {
-    if (data.type) {
+    if (data && data.type) {
       setIsEditMode(true);
-      setValue("fieldType", data.type);
     }
   }, [data]);
 
-  const handleFeildTypeChange = event => {
-    setValue("fieldType", event.target.value);
-  };
-
   const submit = data => {
-    console.log(data, isEditMode);
-    onSubmit(data, isEditMode);
+    const body = {
+      type: data.modelName,
+      fields: []
+    };
+    dataService.saveContentType(body).then(resp => {
+      console.log(resp);
+      if (resp.status === 200) {
+        handleClose();
+        history.push(`/dashboard/models/${resp.data.data.id}`);
+      }
+    });
   };
 
   return (
     <Modal open={open} onClose={handleClose}>
       <div style={modalStyle} className={classes.paper}>
-        <h3>Add new field</h3>
+        <h3>Add new model</h3>
         <form onSubmit={handleSubmit(submit)}>
           <div>
             <FormGroup className={Style.formGroup}>
-              <FormControl className={Style.formElement}>
-                <InputLabel>Field Type</InputLabel>
-                <Select
-                  labelId="Field Type"
-                  id="select"
-                  onChange={handleFeildTypeChange}
-                  label="Field Type"
-                  defaultValue={data?.type}
-                  name="fieldType"
-                  required
-                >
-                  <MenuItem value="text">Text</MenuItem>
-                  <MenuItem value="markedText">Marked Text</MenuItem>
-                  <MenuItem value="array">List</MenuItem>
-                </Select>
-              </FormControl>
               <TextField
-                label="Field Name"
+                label="Model Name"
                 className={Style.formElement}
                 inputRef={register}
-                name="fieldName"
+                name="modelName"
                 defaultValue={data?.name}
-              />
-            </FormGroup>
-            <FormGroup>
-              <TextField
-                style={{ display: "none" }}
-                label="Field Key"
-                className={Style.formElement}
-                inputRef={register}
-                name="fieldKey"
-                defaultValue={data?.id}
               />
             </FormGroup>
           </div>
@@ -126,7 +105,7 @@ const AddFieldPopover: React.FC<IProps> = ({
               variant="contained"
               className={Style.submitBtn}
             >
-              Save
+              Continue
             </Button>
           </FormGroup>
         </form>
@@ -134,4 +113,4 @@ const AddFieldPopover: React.FC<IProps> = ({
     </Modal>
   );
 };
-export default AddFieldPopover;
+export default AddModelPopover;

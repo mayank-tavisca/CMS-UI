@@ -12,8 +12,11 @@ import {
   InputLabel,
   MenuItem
 } from "@material-ui/core";
-import Style from "./AddFieldPopover.module.scss";
+import Style from "./AddPagePopover.module.scss";
 import { useForm } from "react-hook-form";
+import { DataService } from "../../Services/dataService";
+import { useHistory } from "react-router-dom";
+import uuid from "react-uuid";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -41,10 +44,10 @@ interface IProps {
   handleOpen?: any;
   handleClose?: any;
   data?: any;
-  onSubmit: any;
+  onSubmit?: any;
 }
 
-const AddFieldPopover: React.FC<IProps> = ({
+const AddPagePopover: React.FC<IProps> = ({
   open,
   handleOpen,
   handleClose,
@@ -52,19 +55,16 @@ const AddFieldPopover: React.FC<IProps> = ({
   onSubmit
 }) => {
   const classes = useStyles();
+  const history = useHistory();
   const { register, handleSubmit, setValue } = useForm();
 
   const [modalStyle] = useState(getModalStyle);
   const [isEditMode, setIsEditMode] = useState(false);
+  const dataService = new DataService();
 
   useEffect(() => {
-    register({ name: "fieldType" });
-  }, []);
-
-  useEffect(() => {
-    if (data.type) {
+    if (data && data.type) {
       setIsEditMode(true);
-      setValue("fieldType", data.type);
     }
   }, [data]);
 
@@ -73,49 +73,53 @@ const AddFieldPopover: React.FC<IProps> = ({
   };
 
   const submit = data => {
-    console.log(data, isEditMode);
-    onSubmit(data, isEditMode);
+    const body = {
+      name: data.pageName,
+      uuid: uuid(),
+      metaData: {
+        client: data.client,
+        account: data.account
+      },
+      contentTypes: []
+    };
+    dataService.postPageContent(body).then(resp => {
+      console.log(resp);
+      if (resp.status === 200) {
+        handleClose();
+        history.push(`/dashboard/content/${resp.data.data.id}`);
+      }
+    });
   };
 
   return (
     <Modal open={open} onClose={handleClose}>
       <div style={modalStyle} className={classes.paper}>
-        <h3>Add new field</h3>
+        <h3>Add new page details</h3>
         <form onSubmit={handleSubmit(submit)}>
           <div>
             <FormGroup className={Style.formGroup}>
-              <FormControl className={Style.formElement}>
-                <InputLabel>Field Type</InputLabel>
-                <Select
-                  labelId="Field Type"
-                  id="select"
-                  onChange={handleFeildTypeChange}
-                  label="Field Type"
-                  defaultValue={data?.type}
-                  name="fieldType"
-                  required
-                >
-                  <MenuItem value="text">Text</MenuItem>
-                  <MenuItem value="markedText">Marked Text</MenuItem>
-                  <MenuItem value="array">List</MenuItem>
-                </Select>
-              </FormControl>
               <TextField
-                label="Field Name"
+                label="Client"
                 className={Style.formElement}
                 inputRef={register}
-                name="fieldName"
-                defaultValue={data?.name}
+                name="client"
+                defaultValue={data?.client}
+              />
+              <TextField
+                label="Account"
+                className={Style.formElement}
+                inputRef={register}
+                name="account"
+                defaultValue={data?.account}
               />
             </FormGroup>
-            <FormGroup>
+            <FormGroup className={Style.formGroup}>
               <TextField
-                style={{ display: "none" }}
-                label="Field Key"
+                label="Page Name"
                 className={Style.formElement}
                 inputRef={register}
-                name="fieldKey"
-                defaultValue={data?.id}
+                name="pageName"
+                defaultValue={data?.name}
               />
             </FormGroup>
           </div>
@@ -126,7 +130,7 @@ const AddFieldPopover: React.FC<IProps> = ({
               variant="contained"
               className={Style.submitBtn}
             >
-              Save
+              Continue
             </Button>
           </FormGroup>
         </form>
@@ -134,4 +138,4 @@ const AddFieldPopover: React.FC<IProps> = ({
     </Modal>
   );
 };
-export default AddFieldPopover;
+export default AddPagePopover;

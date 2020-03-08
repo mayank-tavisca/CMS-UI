@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TextField from "@material-ui/core/TextField";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import * as MockData from "../../data";
@@ -14,16 +14,19 @@ import {
   TableRow,
   TableCell,
   TablePagination,
-  makeStyles
+  makeStyles,
+  Fab
 } from "@material-ui/core";
 import Styles from "./Home.module.scss";
 import { useHistory } from "react-router-dom";
 import { DataService } from "../../Services/dataService";
+import AddIcon from "@material-ui/icons/Add";
+import AddPagePopover from "../AddPagePopover/AddPagePopover";
 
 const columns = [
   { id: "name", label: "Page name" },
-  { id: "version", label: "Verion Number" },
-  { id: "modules", label: "Modules Available" }
+  { id: "version", label: "Verion" },
+  { id: "lastModifiedOn", label: "Updated" }
 ];
 
 const useStyles = makeStyles({
@@ -40,6 +43,7 @@ const Home = () => {
   const classes = useStyles();
   const dataService = new DataService();
 
+  const [pagePopoverOpen, setPagePopoverOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchSetting, setSearchSetting] = useState({
@@ -48,6 +52,10 @@ const Home = () => {
     type: ""
   });
   const [pageConfigs, setPageConfigs] = useState([]);
+
+  useEffect(() => {
+    handleSearch();
+  }, []);
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -71,11 +79,19 @@ const Home = () => {
   };
 
   const handleSearch = () => {
-    dataService.getPagesByClientAndAccountId(1, 1).then((res: any) => {
-      console.log(res);
-
-      setPageConfigs(res.data);
+    dataService.getAllContentPages().then((res: any) => {
+      if (res.status === 200) {
+        setPageConfigs(res.data.data);
+      }
     });
+  };
+
+  const closePagePopover = () => {
+    setPagePopoverOpen(false);
+  };
+
+  const toggleAddNewPagePopover = () => {
+    setPagePopoverOpen(true);
   };
 
   const renderSelectionForm = () => {
@@ -171,7 +187,9 @@ const Home = () => {
                             onClick={() => redirectToContent(row)}
                             key={column.id}
                           >
-                            {value}
+                            {value && column.id === "lastModifiedOn"
+                              ? new Date(value).toLocaleString()
+                              : value}
                           </TableCell>
                         );
                       })}
@@ -200,6 +218,12 @@ const Home = () => {
 
       {renderSelectionForm()}
       {pageConfigs.length ? renderPageTable() : false}
+
+      <Fab onClick={toggleAddNewPagePopover} className={Styles.addIcon}>
+        <AddIcon />
+      </Fab>
+
+      <AddPagePopover handleClose={closePagePopover} open={pagePopoverOpen} />
     </div>
   );
 };
